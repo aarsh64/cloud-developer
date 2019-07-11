@@ -48,7 +48,7 @@
     {
       "id": "1df3d31a-de30-494b-a3d0-f1228dd8713c",
       "key": "HOST",
-      "value": "udagram-image-filter-dev.us-east-1.elasticbeanstalk.com/",
+      "value": "localhost:8082",
       "type": "string"
     }
   ]
