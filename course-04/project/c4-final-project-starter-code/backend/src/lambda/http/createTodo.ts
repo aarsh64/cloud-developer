@@ -30,22 +30,32 @@ export const handler: APIGatewayProxyHandler = async (
     ...newTodo
   }
   console.log('creating new todo item', newTodoItem)
+  try {
+    await docClient
+      .put({
+        TableName: todosTable,
+        Item: newTodoItem
+      })
+      .promise()
 
-  await docClient
-    .put({
-      TableName: todosTable,
-      Item: newTodoItem
-    })
-    .promise()
-
-  return {
-    statusCode: 201,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true
-    },
-    body: JSON.stringify({
-      newTodoItem
-    })
+    return {
+      statusCode: 201,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        newTodoItem
+      })
+    }
+  } catch (error) {
+    console.log('Failed to update todo ', error)
+    return {
+      statusCode: 404,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: ''
+    }
   }
 }
