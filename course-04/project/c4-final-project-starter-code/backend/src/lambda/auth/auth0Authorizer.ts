@@ -6,57 +6,70 @@ import { createLogger } from '../../utils/logger'
 import Axios from 'axios'
 import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
+import * as middy from 'middy'
+import { secretsManager } from 'middy/middlewares'
 
 const logger = createLogger('auth')
 
 const jwksUrl = 'https://test-endpoint.auth0.com/.well-known/jwks.json'
 
-export const handler = async (
-  event: CustomAuthorizerEvent
-): Promise<CustomAuthorizerResult> => {
-  logger.info('Authorizing a user', event.authorizationToken)
-  try {
-    const jwtToken = await verifyToken(event.authorizationToken)
-    logger.info('User was authorized', jwtToken)
+const secretId = process.env.AUTH_0_SECRET_ID
+const secretField = process.env.AUTH_0_SECRET_FIELD
 
-    return {
-      principalId: jwtToken.sub,
-      policyDocument: {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Action: 'execute-api:Invoke',
-            Effect: 'Allow',
-            Resource: '*'
-          }
-        ]
+export const handler = middy(
+  async (
+    event: CustomAuthorizerEvent,
+    context
+  ): Promise<CustomAuthorizerResult> => {
+    logger.info('Authorizing a user', event.authorizationToken)
+    try {
+      const jwtToken = await verifyToken(
+        event.authorizationToken,
+        context.AUTH0_SECRET[secretField]
+      )
+      logger.info('User was authorized', jwtToken)
+
+      return {
+        principalId: jwtToken.sub,
+        policyDocument: {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Action: 'execute-api:Invoke',
+              Effect: 'Allow',
+              Resource: '*'
+            }
+          ]
+        }
       }
-    }
-  } catch (e) {
-    logger.error('User not authorized', { error: e.message })
+    } catch (e) {
+      logger.error('User not authorized', { error: e.message })
 
-    return {
-      principalId: 'user',
-      policyDocument: {
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Action: 'execute-api:Invoke',
-            Effect: 'Deny',
-            Resource: '*'
-          }
-        ]
+      return {
+        principalId: 'user',
+        policyDocument: {
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Action: 'execute-api:Invoke',
+              Effect: 'Deny',
+              Resource: '*'
+            }
+          ]
+        }
       }
     }
   }
-}
+)
 
-async function verifyToken(authHeader: string): Promise<JwtPayload> {
+async function verifyToken(
+  authHeader: string,
+  secret: string
+): Promise<JwtPayload> {
   const token = getToken(authHeader)
   const jwt: Jwt = decode(token, { complete: true }) as Jwt
 
-  // TODO: Implement token verification
-  return undefined
+  return verify(token, secret)
 }
 
 function getToken(authHeader: string): string {
@@ -70,3 +83,15 @@ function getToken(authHeader: string): string {
 
   return token
 }
+
+handler.use(
+  secretsManager({
+    cache: true,
+    cacheExpiryInMillis: 60000,
+    // Throw an error if can't read the secret
+    throwOnFailedCall: true,
+    secrets: {
+      AUTH0_SECRET: secretId
+    }
+  })
+)
