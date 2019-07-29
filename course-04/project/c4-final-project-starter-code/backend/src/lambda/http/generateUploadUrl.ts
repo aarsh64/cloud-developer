@@ -11,7 +11,7 @@ const s3 = new AWS.S3({
   signatureVersion: 'v4'
 })
 
-const attachementsTable = process.env.ATTACHMENTS_TABLE
+// const attachementsTable = process.env.ATTACHMENTS_TABLE
 const bucketName = process.env.IMAGES_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 

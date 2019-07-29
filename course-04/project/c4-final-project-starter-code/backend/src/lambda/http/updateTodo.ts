@@ -5,7 +5,7 @@ import {
   APIGatewayProxyHandler,
   APIGatewayProxyResult
 } from 'aws-lambda'
-import * as AWS from 'aws-sdk
+import * as AWS from 'aws-sdk'
 
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
 

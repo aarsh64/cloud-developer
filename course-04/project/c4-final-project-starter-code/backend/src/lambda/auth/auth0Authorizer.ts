@@ -1,10 +1,9 @@
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import 'source-map-support/register'
 
-import { verify, decode } from 'jsonwebtoken'
+import { verify } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
-import Axios from 'axios'
-import { Jwt } from '../../auth/Jwt'
+// import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
 import * as middy from 'middy'
 import { secretsManager } from 'middy/middlewares'
@@ -27,6 +26,7 @@ export const handler = middy(
         event.authorizationToken,
         context.AUTH0_SECRET[secretField]
       )
+      console.log('jwks url ', jwksUrl)
       logger.info('User was authorized', jwtToken)
 
       return {
@@ -67,9 +67,9 @@ async function verifyToken(
   secret: string
 ): Promise<JwtPayload> {
   const token = getToken(authHeader)
-  const jwt: Jwt = decode(token, { complete: true }) as Jwt
+  // const jwt: Jwt = decode(token, { complete: true }) as Jwt
 
-  return verify(token, secret)
+  return verify(token, secret) as JwtPayload
 }
 
 function getToken(authHeader: string): string {
