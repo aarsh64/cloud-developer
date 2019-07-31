@@ -6,6 +6,7 @@ import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 
 const todosAccess = new TodosAccess()
+const todosTable = process.env.TODOS_TABLE
 
 export async function getAllTodos(userId: string): Promise<TodoItem[]> {
   return todosAccess.getUserTodos(userId)
@@ -21,11 +22,13 @@ export async function createTodo(userId: string, newTodo: CreateTodoRequest) {
   }
   console.log('creating new todo item', newTodoItem)
 
-  return await this.todosAccess.createTodo(newTodoItem)
+  await todosAccess.createTodo(newTodoItem)
+
+  return newTodoItem
 }
 
 export async function deleteTodo(todoId: string) {
-  return await this.todosAccess.deleteTodo(todoId)
+  return await todosAccess.deleteTodo(todoId)
 }
 
 export async function updateTodoUploadUrl(
@@ -33,7 +36,7 @@ export async function updateTodoUploadUrl(
   attachmentUrl: string
 ) {
   const updatedTodoItem = {
-    TableName: this.todosTable,
+    TableName: todosTable,
     Key: {
       todoId: todoId
     },
@@ -45,7 +48,7 @@ export async function updateTodoUploadUrl(
   }
   console.log('updating TodoItem', updatedTodoItem)
 
-  return await this.todosAccess.updateTodoUploadUrl(updatedTodoItem)
+  return await todosAccess.updateTodoItem(updatedTodoItem)
 }
 
 export async function updateTodo(
@@ -53,7 +56,7 @@ export async function updateTodo(
   updatedTodo: UpdateTodoRequest
 ) {
   const updatedTodoItem = {
-    TableName: this.todosTable,
+    TableName: todosTable,
     Key: {
       todoId: todoId
     },
@@ -69,5 +72,5 @@ export async function updateTodo(
 
   console.log('updating todo item ', updatedTodoItem)
 
-  return await this.todosAccess.updateTodoUploadUrl(updatedTodoItem)
+  return await todosAccess.updateTodoItem(updatedTodoItem)
 }

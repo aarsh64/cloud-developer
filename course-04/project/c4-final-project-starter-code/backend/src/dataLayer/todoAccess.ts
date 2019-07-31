@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
-import { DocumentClient, UpdateItemInput } from 'aws-sdk/clients/dynamodb'
+import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
@@ -49,7 +49,7 @@ export class TodosAccess {
       .promise()
   }
 
-  async updateTodoItem(updatedTodoItem: UpdateItemInput) {
+  async updateTodoItem(updatedTodoItem) {
     return this.docClient.update(updatedTodoItem).promise()
   }
 }
