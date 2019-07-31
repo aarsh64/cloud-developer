@@ -1,28 +1,16 @@
 import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
-import * as AWS from 'aws-sdk'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
-
-const docClient = new AWS.DynamoDB.DocumentClient()
-
-const todosTable = process.env.TODOS_TABLE
+import { deleteTodo } from '../../businessLogic/todos'
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
 
-    // TODO: Remove a TODO item by id
     try {
-      await docClient
-        .delete({
-          Key: {
-            todoId: todoId
-          },
-          TableName: todosTable
-        })
-        .promise()
+      await deleteTodo(todoId)
 
       console.log('deleted todo ', todoId)
 
@@ -43,8 +31,6 @@ export const handler = middy(
         body: ''
       }
     }
-
-    return undefined
   }
 )
 

@@ -6,13 +6,8 @@ import {
   APIGatewayProxyHandler
 } from 'aws-lambda'
 
-import * as AWS from 'aws-sdk'
 import { getUserId } from '../utils'
-
-const docClient = new AWS.DynamoDB.DocumentClient()
-
-const todosTable = process.env.TODOS_TABLE
-const userIdIndex = process.env.USER_ID_INDEX
+import { getAllTodos } from '../../businessLogic/todos'
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
@@ -32,7 +27,7 @@ export const handler: APIGatewayProxyHandler = async (
     }
   }
 
-  const todos = await getUserTodos(userId)
+  const todos = await getAllTodos(userId)
 
   return {
     statusCode: 201,
@@ -43,20 +38,4 @@ export const handler: APIGatewayProxyHandler = async (
       items: todos
     })
   }
-}
-
-async function getUserTodos(userId: string) {
-  const result = await docClient
-    .query({
-      TableName: todosTable,
-      IndexName: userIdIndex,
-      KeyConditionExpression: 'userId = :userId',
-      ExpressionAttributeValues: {
-        ':userId': userId
-      },
-      ScanIndexForward: false
-    })
-    .promise()
-
-  return result.Items
 }
