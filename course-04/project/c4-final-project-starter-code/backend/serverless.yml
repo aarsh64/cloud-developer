@@ -4,7 +4,7 @@ service:
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
-
+  - serverless-dynamodb-local
 provider:
   name: aws
   runtime: nodejs8.10
@@ -13,8 +13,8 @@ provider:
   region: ${opt:region, 'us-east-1'}
 
   environment:
-    TODOS_TABLE: Todos-${self:provider.stage}
-    TODO_ID_INDEX: TodoIdIndex
+    TODOS_TABLE: Todos1-${self:provider.stage}
+    USER_ID_INDEX: UserIdIndex
     AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
     AUTH_0_SECRET_FIELD: auth0Secret
     ATTACHMENTS_TABLE: Attachments-${self:provider.stage}
@@ -28,14 +28,14 @@ provider:
         - dynamodb:Scan
         - dynamodb:PutItem
         - dynamodb:GetItem
-        - dynamodb:DeletItem
+        - dynamodb:DeleteItem
         - dynamodb:UpdateItem
         - dynamodb:Query
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
     - Effect: Allow
       Action:
         - dynamodb:Query
-      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODO_ID_INDEX}
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
     - Effect: Allow
       Action:
         - secretsmanager:GetSecretValue
@@ -58,6 +58,19 @@ provider:
         - s3:PutObject
         - s3:GetObject
       Resource: arn:aws:s3:::${self:provider.environment.TODOS_ATTACHMENT_S3_BUCKET}/*
+
+custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      migrate: true
+      seed: true
+      convertEmptyValues: true
 
 functions:
   Auth:
@@ -85,6 +98,7 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          cors: true
 
   # TODO: Configure this function
   DeleteTodo:
@@ -93,6 +107,7 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
+          cors: true
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -101,6 +116,7 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          cors: true
 
 resources:
   Resources:
@@ -108,26 +124,20 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          - AttributeName: userId
-            AttributeType: S
-          - AttributeName: dueDate
-            AttributeType: S
           - AttributeName: todoId
             AttributeType: S
-        KeySchema:
           - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: todoId
             KeyType: HASH
-          - AttributeName: dueDate
-            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
-        LocalSecondaryIndexes:
-          - IndexName: ${self:provider.environment.TODO_ID_INDEX}
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.USER_ID_INDEX}
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
-              - AttributeName: todoId
-                KeyType: RANGE
             Projection:
               ProjectionType: ALL
 

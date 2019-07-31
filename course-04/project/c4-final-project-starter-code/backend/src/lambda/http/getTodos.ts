@@ -12,6 +12,7 @@ import { getUserId } from '../utils'
 const docClient = new AWS.DynamoDB.DocumentClient()
 
 const todosTable = process.env.TODOS_TABLE
+const userIdIndex = process.env.USER_ID_INDEX
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
@@ -48,6 +49,7 @@ async function getUserTodos(userId: string) {
   const result = await docClient
     .query({
       TableName: todosTable,
+      IndexName: userIdIndex,
       KeyConditionExpression: 'userId = :userId',
       ExpressionAttributeValues: {
         ':userId': userId

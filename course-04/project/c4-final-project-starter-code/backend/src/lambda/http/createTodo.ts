@@ -25,8 +25,8 @@ export const handler: APIGatewayProxyHandler = async (
 
   // TODO: Implement creating a new TODO item
   const newTodoItem: TodoItem = {
-    userId: getUserId(event),
     todoId: uuid.v4(),
+    userId: getUserId(event),
     createdAt: new Date().toISOString(),
     done: false,
     ...newTodo
@@ -47,7 +47,7 @@ export const handler: APIGatewayProxyHandler = async (
         'Access-Control-Allow-Credentials': true
       },
       body: JSON.stringify({
-        newTodoItem
+        item: newTodoItem
       })
     }
   } catch (error) {
